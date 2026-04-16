@@ -20,7 +20,7 @@ const AppContent = () => {
   const [pageParams, setPageParams] = useState({});
 
   useEffect(() => {
-    axios.defaults.baseURL = 'http://localhost:5000';
+    axios.defaults.baseURL = process.env.REACT_APP_API_URL || '';
   }, []);
 
   const syncFromHash = () => {
