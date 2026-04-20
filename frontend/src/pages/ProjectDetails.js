@@ -85,6 +85,23 @@ const ProjectDetails = ({ projectId, navigate }) => {
         <p><strong>Category:</strong> {project.category}</p>
         <p><strong>Posted by:</strong> {project.client.name}</p>
 
+        {project.projectImages && project.projectImages.length > 0 && (
+          <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+            <h3>Project Images</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+              {project.projectImages.map((image, idx) => (
+                <img
+                  key={idx}
+                  src={image}
+                  alt={`Project ${idx + 1}`}
+                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '5px', cursor: 'pointer' }}
+                  onClick={() => window.open(image, '_blank')}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div style={{ marginTop: '20px' }}>
           <h3>Description</h3>
           <p>{project.description}</p>

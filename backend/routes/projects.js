@@ -1,13 +1,27 @@
 const express = require('express');
 const Project = require('../models/Project');
 const auth = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
 // Create project
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, upload.array('projectImages', 10), async (req, res) => {
   try {
     const { title, description, category, budget, budgetType, skills, deadline } = req.body;
+
+    // Parse skills if it's a JSON string
+    let parsedSkills = skills;
+    if (typeof skills === 'string') {
+      try {
+        parsedSkills = JSON.parse(skills);
+      } catch (e) {
+        parsedSkills = skills.split(',').map(s => s.trim());
+      }
+    }
+
+    // Get uploaded file paths
+    const projectImages = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
 
     const project = new Project({
       title,
@@ -15,9 +29,10 @@ router.post('/', auth, async (req, res) => {
       category,
       budget,
       budgetType,
-      skills,
+      skills: parsedSkills,
       deadline,
       client: req.user.id,
+      projectImages: projectImages,
     });
 
     await project.save();

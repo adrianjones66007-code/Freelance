@@ -2,8 +2,21 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 export const ProjectCard = ({ project, onViewDetails }) => {
+  const imageUrl = project.projectImages && project.projectImages.length > 0 
+    ? project.projectImages[0]
+    : null;
+
   return (
     <div className="card">
+      {imageUrl && (
+        <div style={{ width: '100%', height: '200px', overflow: 'hidden', borderRadius: '5px', marginBottom: '10px' }}>
+          <img 
+            src={imageUrl} 
+            alt={project.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
+      )}
       <h3>{project.title}</h3>
       <p className="category"><strong>Category:</strong> {project.category}</p>
       <p><strong>Budget:</strong> ${project.budget}</p>
@@ -32,17 +45,29 @@ export const ProjectForm = ({ onSubmit, initialData = null }) => {
     skills: '',
     deadline: '',
   });
+  const [projectImages, setProjectImages] = useState([]);
+  const [imagePreview, setImagePreview] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setProjectImages(files);
+    
+    // Create preview URLs
+    const previews = files.map(file => URL.createObjectURL(file));
+    setImagePreview(previews);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
       ...formData,
-      skills: formData.skills.split(',').map(s => s.trim())
+      skills: formData.skills.split(',').map(s => s.trim()),
+      projectImages: projectImages
     });
   };
 
@@ -69,6 +94,32 @@ export const ProjectForm = ({ onSubmit, initialData = null }) => {
           required
           placeholder="Describe your project in detail"
         />
+      </div>
+
+      <div className="form-group">
+        <label>Project Images</label>
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleImageChange}
+          placeholder="Upload project images"
+        />
+        <small style={{ display: 'block', marginTop: '8px', color: '#666' }}>
+          You can upload up to 10 images (JPEG, PNG, GIF, WebP). Max 5MB each.
+        </small>
+        {imagePreview.length > 0 && (
+          <div style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {imagePreview.map((preview, idx) => (
+              <img
+                key={idx}
+                src={preview}
+                alt={`Preview ${idx}`}
+                style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '5px' }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="form-group">

@@ -43,6 +43,7 @@ const projectSchema = new mongoose.Schema({
     ref: 'Bid',
   }],
   attachments: [String],
+  projectImages: [String],
   createdAt: {
     type: Date,
     default: Date.now,

@@ -15,8 +15,28 @@ const PostProject = ({ navigate }) => {
     setLoading(true);
 
     try {
-      await axios.post('/api/projects', projectData, {
-        headers: { Authorization: `Bearer ${token}` }
+      // Create FormData to handle file uploads
+      const formData = new FormData();
+      formData.append('title', projectData.title);
+      formData.append('description', projectData.description);
+      formData.append('category', projectData.category);
+      formData.append('budget', projectData.budget);
+      formData.append('budgetType', projectData.budgetType);
+      formData.append('deadline', projectData.deadline);
+      formData.append('skills', JSON.stringify(projectData.skills));
+
+      // Add images
+      if (projectData.projectImages && projectData.projectImages.length > 0) {
+        projectData.projectImages.forEach((image) => {
+          formData.append('projectImages', image);
+        });
+      }
+
+      await axios.post('/api/projects', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
       });
       setSuccess('Project posted successfully!');
       setTimeout(() => navigate('/dashboard'), 2000);
