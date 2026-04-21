@@ -44,6 +44,25 @@ const projectSchema = new mongoose.Schema({
   }],
   attachments: [String],
   projectImages: [String],
+  completedAt: Date,
+  reviewRequested: {
+    type: Boolean,
+    default: false,
+  },
+  payment: {
+    status: {
+      type: String,
+      enum: ['pending', 'completed', 'refunded'],
+      default: 'pending',
+    },
+    stripePaymentIntentId: String,
+    amount: Number,
+    currency: {
+      type: String,
+      default: 'usd',
+    },
+    completedAt: Date,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

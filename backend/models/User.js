@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
+    gallery: [String], // Array of image URLs for gallery
   },
   averageRating: {
     type: Number,
