@@ -86,9 +86,14 @@ const FreelancerList = ({ navigate }) => {
                 count={freelancer.totalReviews}
               />
 
-              <button className="btn btn-primary" onClick={() => navigate(`/profile/${freelancer._id}`)}>
-                View Profile
-              </button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                <button className="btn btn-primary" onClick={() => navigate(`/profile/${freelancer._id}`)} style={{ flex: 1 }}>
+                  View Profile
+                </button>
+                <button className="btn btn-secondary" onClick={() => navigate('/messages')} style={{ flex: 1 }}>
+                  Message
+                </button>
+              </div>
             </div>
           ))}
         </div>

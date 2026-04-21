@@ -199,9 +199,13 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
                 </div>
               )}
 
-              {isOwnProfile && (
+              {isOwnProfile ? (
                 <button className="btn btn-primary" onClick={() => setEditing(true)} style={{ marginTop: '20px' }}>
                   Edit Profile
+                </button>
+              ) : (
+                <button className="btn btn-primary" onClick={() => navigate('/messages')} style={{ marginTop: '20px' }}>
+                  Message This User
                 </button>
               )}
             </>
