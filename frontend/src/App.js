@@ -13,6 +13,7 @@ import ProjectDetails from './pages/ProjectDetails';
 import Profile from './pages/Profile';
 import FreelancerList from './pages/FreelancerList';
 import Messages from './pages/Messages';
+import JobPostingChatbot from './components/JobPostingChatbot';
 
 const AppContent = () => {
   const { user, logout, loading } = useContext(AuthContext);
@@ -110,6 +111,7 @@ const AppContent = () => {
         {page}
       </div>
       <Footer />
+      <JobPostingChatbot />
     </div>
   );
 };

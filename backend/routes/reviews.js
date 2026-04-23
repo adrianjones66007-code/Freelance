@@ -11,23 +11,27 @@ router.post('/', auth, async (req, res) => {
     const { reviewedUserId, projectId, rating, comment } = req.body;
 
     // Check if user already reviewed this person
-    const existingReview = await Review.findOne({
+    const existingReviewQuery = {
       reviewer: req.user.id,
       reviewed: reviewedUserId,
-      project: projectId
-    });
+    };
+    if (projectId) existingReviewQuery.project = projectId;
+
+    const existingReview = await Review.findOne(existingReviewQuery);
 
     if (existingReview) {
-      return res.status(400).json({ message: 'You have already reviewed this person for this project' });
+      return res.status(400).json({ message: 'You have already reviewed this person' });
     }
 
-    const review = new Review({
+    const reviewData = {
       reviewer: req.user.id,
       reviewed: reviewedUserId,
-      project: projectId,
       rating,
       comment,
-    });
+    };
+    if (projectId) reviewData.project = projectId;
+
+    const review = new Review(reviewData);
 
     await review.save();
     await review.populate('reviewer', 'name profile.profileImage');

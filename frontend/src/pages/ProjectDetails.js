@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { BidCard, BidForm } from '../components/BidComponents';
-import { ReviewForm, ReviewCard } from '../components/ReviewComponents';
+import { ReviewCard } from '../components/ReviewComponents';
+import ImageModal from '../components/ImageModal';
 
 const ProjectDetails = ({ projectId, navigate }) => {
   const { user, token } = useContext(AuthContext);
@@ -11,12 +12,9 @@ const ProjectDetails = ({ projectId, navigate }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('details');
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  useEffect(() => {
-    fetchProject();
-  }, [projectId]);
-
-  const fetchProject = async () => {
+  const fetchProject = useCallback(async () => {
     try {
       const response = await axios.get(`/api/projects/${projectId}`);
       setProject(response.data);
@@ -30,7 +28,11 @@ const ProjectDetails = ({ projectId, navigate }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    fetchProject();
+  }, [fetchProject]);
 
   const handleBidSubmit = async (bidData) => {
     try {
@@ -67,6 +69,14 @@ const ProjectDetails = ({ projectId, navigate }) => {
     }
   };
 
+  const openImagePreview = (imageUrl) => {
+    setSelectedImage(imageUrl);
+  };
+
+  const closeImagePreview = () => {
+    setSelectedImage(null);
+  };
+
   if (loading) return <div className="container"><p style={{ textAlign: 'center', padding: '40px' }}>Loading...</p></div>;
   if (!project) return <div className="container"><p style={{ textAlign: 'center', padding: '40px' }}>Project not found</p></div>;
 
@@ -90,17 +100,30 @@ const ProjectDetails = ({ projectId, navigate }) => {
             <h3>Project Images</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
               {project.projectImages.map((image, idx) => (
-                <img
+                <button
                   key={idx}
-                  src={image}
-                  alt={`Project ${idx + 1}`}
-                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '5px', cursor: 'pointer' }}
-                  onClick={() => window.open(image, '_blank')}
-                />
+                  type="button"
+                  onClick={() => openImagePreview(image)}
+                  style={{
+                    padding: 0,
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    width: '100%',
+                    textAlign: 'left'
+                  }}
+                >
+                  <img
+                    src={image}
+                    alt={`Project ${idx + 1}`}
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '5px' }}
+                  />
+                </button>
               ))}
             </div>
           </div>
         )}
+        <ImageModal src={selectedImage} alt={project.title} onClose={closeImagePreview} />
 
         <div style={{ marginTop: '20px' }}>
           <h3>Description</h3>

@@ -6,7 +6,14 @@ const upload = require('../middleware/upload');
 const router = express.Router();
 
 // Create project
-router.post('/', auth, upload.array('projectImages', 10), async (req, res) => {
+router.post('/', auth, (req, res, next) => {
+  // Check if this is a multipart request (with files) or JSON
+  if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+    upload.array('projectImages', 10)(req, res, next);
+  } else {
+    next();
+  }
+}, async (req, res) => {
   try {
     const { title, description, category, budget, budgetType, skills, deadline } = req.body;
 
@@ -20,7 +27,7 @@ router.post('/', auth, upload.array('projectImages', 10), async (req, res) => {
       }
     }
 
-    // Get uploaded file paths
+    // Get uploaded file paths (if any)
     const projectImages = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
 
     const project = new Project({
@@ -38,6 +45,7 @@ router.post('/', auth, upload.array('projectImages', 10), async (req, res) => {
     await project.save();
     res.status(201).json(project);
   } catch (error) {
+    console.error('Error creating project:', error);
     res.status(500).json({ message: 'Error creating project' });
   }
 });

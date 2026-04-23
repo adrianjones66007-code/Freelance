@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 
 export const ProjectCard = ({ project, onViewDetails }) => {
   const imageUrl = project.projectImages && project.projectImages.length > 0 
@@ -9,7 +8,13 @@ export const ProjectCard = ({ project, onViewDetails }) => {
   return (
     <div className="card">
       {imageUrl && (
-        <div style={{ width: '100%', height: '200px', overflow: 'hidden', borderRadius: '5px', marginBottom: '10px' }}>
+        <div
+          style={{ width: '100%', height: '200px', overflow: 'hidden', borderRadius: '5px', marginBottom: '10px', cursor: 'pointer' }}
+          onClick={() => onViewDetails(project._id)}
+          role="button"
+          tabIndex={0}
+          onKeyPress={(e) => { if (e.key === 'Enter') onViewDetails(project._id); }}
+        >
           <img 
             src={imageUrl} 
             alt={project.title}

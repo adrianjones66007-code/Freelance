@@ -47,6 +47,19 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  mfaEnabled: {
+    type: Boolean,
+    default: false,
+  },
+  mfaMethod: {
+    type: String,
+    enum: ['email', 'disabled'],
+    default: 'email',
+  },
+  mfaSecret: {
+    type: String,
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

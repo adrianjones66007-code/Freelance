@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { ReviewCard, ReviewForm, RatingDisplay } from '../components/ReviewComponents';
+import ImageModal from '../components/ImageModal';
 
 const Profile = ({ userId, isOwnProfile, navigate }) => {
   const { user, token } = useContext(AuthContext);
@@ -14,6 +15,7 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [selectedGalleryImage, setSelectedGalleryImage] = useState(null);
 
   const profileId = userId || user?.id;
 
@@ -107,30 +109,67 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
   };
 
   const handleGalleryUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (!files || files.length === 0) {
+      console.log('No files selected');
+      return;
+    }
+
+    console.log('Starting upload process...');
+    console.log('Files selected:', files.length);
+    console.log('Profile ID:', profileId);
+    console.log('Token exists:', !!token);
+    console.log('User:', user);
+    console.log('Is own profile:', isOwnProfile);
+
+    if (!token) {
+      alert('You must be logged in to upload photos');
+      return;
+    }
+
+    if (!isOwnProfile) {
+      alert('You can only upload photos to your own profile');
+      return;
+    }
 
     setUploading(true);
-    const formDataObj = new FormData();
-    formDataObj.append('image', file);
 
     try {
-      const response = await axios.post(`/api/users/${profileId}/gallery`, formDataObj, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      setProfile(prev => ({
-        ...prev,
-        profile: { ...prev.profile, gallery: response.data.gallery }
-      }));
-      alert('Photo added to gallery!');
+      // Upload files one by one
+      for (const file of files) {
+        console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+
+        const formDataObj = new FormData();
+        formDataObj.append('image', file);
+
+        const response = await axios.post(`/api/users/${profileId}/gallery`, formDataObj, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        console.log('Upload response:', response.data);
+
+        // Update the profile state after each successful upload
+        setProfile(prev => ({
+          ...prev,
+          profile: {
+            ...prev.profile,
+            gallery: response.data.gallery
+          }
+        }));
+      }
+
+      alert(`${files.length} photo${files.length > 1 ? 's' : ''} added to gallery successfully!`);
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Failed to upload photo');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      alert(`Failed to upload photo: ${error.response?.data?.message || error.message}`);
     } finally {
       setUploading(false);
+      // Reset the file input
+      e.target.value = '';
     }
   };
 
@@ -295,66 +334,135 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
       </div>
 
       {/* Gallery Section */}
-      {profile.profile?.skills && (
+      {profile.profile && (
         <div className="card" style={{ marginBottom: '30px', padding: '30px' }}>
           <h2>Portfolio Gallery</h2>
-          
+          <p style={{ color: '#666', marginTop: '10px', marginBottom: '20px' }}>
+            Showcase your completed work with photos. Upload images to your portfolio gallery so clients can review your experience.
+          </p>
+
           {isOwnProfile && (
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '10px' }}>
-                <span className="btn btn-secondary" style={{ cursor: 'pointer', display: 'inline-block' }}>
-                  {uploading ? 'Uploading...' : '+ Add Photo'}
-                </span>
+            <div style={{
+              border: '2px dashed #667eea',
+              borderRadius: '10px',
+              padding: '30px',
+              textAlign: 'center',
+              marginBottom: '30px',
+              background: uploading ? '#f8f9fa' : '#fafbff'
+            }}>
+              <div style={{ marginBottom: '15px' }}>
+                <span style={{ fontSize: '3em' }}>📸</span>
+              </div>
+              <h3 style={{ margin: '10px 0', color: '#333' }}>
+                {uploading ? 'Uploading Photo...' : 'Add Photos to Your Portfolio'}
+              </h3>
+              <p style={{ color: '#666', marginBottom: '20px' }}>
+                Upload high-quality images of your completed work to showcase your skills to potential clients.
+              </p>
+              <label
+                className="btn btn-primary"
+                style={{
+                  cursor: uploading ? 'default' : 'pointer',
+                  marginBottom: 0,
+                  padding: '12px 24px',
+                  fontSize: '16px'
+                }}
+              >
+                {uploading ? 'Uploading...' : '📎 Choose Photos'}
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleGalleryUpload}
                   disabled={uploading}
+                  multiple
                   style={{ display: 'none' }}
                 />
               </label>
+              <p style={{ fontSize: '14px', color: '#999', marginTop: '10px' }}>
+                Supported formats: JPG, PNG, GIF, WebP (max 5MB each)
+              </p>
             </div>
           )}
 
           {profile.profile?.gallery && profile.profile.gallery.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '15px' }}>
-              {profile.profile.gallery.map((image, idx) => (
-                <div key={idx} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden' }}>
-                  <img 
-                    src={image} 
-                    alt={`Gallery ${idx}`}
-                    style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-                  />
-                  {isOwnProfile && (
+            <>
+              <h3>Your Portfolio Photos ({profile.profile.gallery.length})</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '20px' }}>
+                {profile.profile.gallery.map((image, idx) => (
+                  <div key={idx} style={{
+                    position: 'relative',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    transition: 'transform 0.2s'
+                  }}>
                     <button
-                      onClick={() => handleGalleryDelete(idx)}
+                      type="button"
+                      onClick={() => setSelectedGalleryImage(image)}
                       style={{
-                        position: 'absolute',
-                        top: '5px',
-                        right: '5px',
-                        background: 'rgba(255, 107, 107, 0.9)',
-                        color: 'white',
+                        padding: 0,
                         border: 'none',
-                        borderRadius: '50%',
-                        width: '30px',
-                        height: '30px',
+                        background: 'none',
                         cursor: 'pointer',
-                        fontSize: '16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
+                        width: '100%',
+                        height: '200px',
+                        overflow: 'hidden'
                       }}
                     >
-                      ✕
+                      <img
+                        src={image}
+                        alt={`Portfolio ${idx + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '200px',
+                          objectFit: 'cover',
+                          transition: 'transform 0.2s'
+                        }}
+                        onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                        onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                      />
                     </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                    {isOwnProfile && (
+                      <button
+                        onClick={() => handleGalleryDelete(idx)}
+                        style={{
+                          position: 'absolute',
+                          top: '10px',
+                          right: '10px',
+                          background: 'rgba(255,0,0,0.8)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '30px',
+                          height: '30px',
+                          cursor: 'pointer',
+                          fontSize: '16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title="Delete photo"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <ImageModal src={selectedGalleryImage} alt="Portfolio photo" onClose={() => setSelectedGalleryImage(null)} />
+            </>
           ) : (
-            <p style={{ color: '#999', textAlign: 'center', padding: '40px 20px' }}>
-              {isOwnProfile ? 'No photos yet. Add your first one!' : 'No portfolio photos available'}
-            </p>
+            <div style={{
+              textAlign: 'center',
+              padding: '40px',
+              color: '#999',
+              background: '#f8f9fa',
+              borderRadius: '10px'
+            }}>
+              <span style={{ fontSize: '3em', marginBottom: '20px', display: 'block' }}>🖼️</span>
+              <h3>{isOwnProfile ? 'No photos yet' : 'No portfolio photos available'}</h3>
+              <p>{isOwnProfile ? 'Upload your first portfolio photo above to get started!' : 'This user hasn\'t added any portfolio photos yet.'}</p>
+            </div>
           )}
         </div>
       )}
