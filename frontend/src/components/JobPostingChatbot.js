@@ -195,7 +195,6 @@ const JobPostingChatbot = ({ onClose }) => {
       await axios.post('/api/projects', projectData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
         },
       });
 

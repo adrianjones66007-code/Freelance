@@ -35,7 +35,6 @@ const PostProject = ({ navigate }) => {
       await axios.post('/api/projects', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
         }
       });
       setSuccess('Project posted successfully!');
