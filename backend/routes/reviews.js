@@ -10,6 +10,10 @@ router.post('/', auth, async (req, res) => {
   try {
     const { reviewedUserId, projectId, rating, comment } = req.body;
 
+    if (reviewedUserId === req.user.id) {
+      return res.status(400).json({ message: 'You cannot review yourself' });
+    }
+
     // Check if user already reviewed this person
     const existingReviewQuery = {
       reviewer: req.user.id,

@@ -15,6 +15,10 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Receiver and message are required' });
     }
 
+    if (receiver === req.user.id) {
+      return res.status(400).json({ message: 'You cannot send a message to yourself' });
+    }
+
     const newMessage = new Message({
       sender: req.user.id,
       receiver,

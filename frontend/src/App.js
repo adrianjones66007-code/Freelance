@@ -19,6 +19,7 @@ const AppContent = () => {
   const { user, logout, loading } = useContext(AuthContext);
   const [currentPage, setCurrentPage] = useState('home');
   const [pageParams, setPageParams] = useState({});
+  const [showChatbot, setShowChatbot] = useState(false);
 
   useEffect(() => {
     axios.defaults.baseURL = process.env.REACT_APP_API_URL || '';
@@ -92,7 +93,7 @@ const AppContent = () => {
       page = <ProjectDetails projectId={pageParams.id} navigate={navigate} />;
       break;
     case 'profile':
-      page = <Profile userId={pageParams.id} isOwnProfile={pageParams.id === user?.id} navigate={navigate} />;
+      page = <Profile userId={pageParams.id} isOwnProfile={!pageParams.id || pageParams.id === user?.id} navigate={navigate} />;
       break;
     case 'freelancers':
       page = <FreelancerList navigate={navigate} />;
@@ -111,7 +112,19 @@ const AppContent = () => {
         {page}
       </div>
       <Footer />
-      <JobPostingChatbot />
+      <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1001 }}>
+        {!showChatbot ? (
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowChatbot(true)}
+            style={{ borderRadius: '50%', width: '60px', height: '60px', fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            aria-label="Open Job Posting Assistant"
+          >
+            🤖
+          </button>
+        ) : null}
+      </div>
+      {showChatbot && <JobPostingChatbot onClose={() => setShowChatbot(false)} />}
     </div>
   );
 };

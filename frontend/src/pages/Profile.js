@@ -18,6 +18,7 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
   const [selectedGalleryImage, setSelectedGalleryImage] = useState(null);
 
   const profileId = userId || user?.id;
+  const viewingOwnProfile = isOwnProfile || profileId === user?.id;
 
   useEffect(() => {
     if (profileId) {
@@ -120,14 +121,14 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
     console.log('Profile ID:', profileId);
     console.log('Token exists:', !!token);
     console.log('User:', user);
-    console.log('Is own profile:', isOwnProfile);
+    console.log('Is own profile:', viewingOwnProfile);
 
     if (!token) {
       alert('You must be logged in to upload photos');
       return;
     }
 
-    if (!isOwnProfile) {
+    if (!viewingOwnProfile) {
       alert('You can only upload photos to your own profile');
       return;
     }
@@ -192,6 +193,11 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
   };
 
   const handleSubmitReview = async (reviewData) => {
+    if (profileId === user?.id) {
+      alert('You cannot review yourself');
+      return;
+    }
+
     setReviewSubmitting(true);
     try {
       await axios.post('/api/reviews', {
@@ -318,7 +324,7 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
               )}
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                {isOwnProfile ? (
+                {viewingOwnProfile ? (
                   <button className="btn btn-primary" onClick={() => setEditing(true)}>
                     Edit Profile
                   </button>
@@ -341,7 +347,7 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
             Showcase your completed work with photos. Upload images to your portfolio gallery so clients can review your experience.
           </p>
 
-          {isOwnProfile && (
+          {viewingOwnProfile && (
             <div style={{
               border: '2px dashed #667eea',
               borderRadius: '10px',
@@ -422,7 +428,7 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
                         onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
                       />
                     </button>
-                    {isOwnProfile && (
+                    {viewingOwnProfile && (
                       <button
                         onClick={() => handleGalleryDelete(idx)}
                         style={{
@@ -460,15 +466,15 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
               borderRadius: '10px'
             }}>
               <span style={{ fontSize: '3em', marginBottom: '20px', display: 'block' }}>🖼️</span>
-              <h3>{isOwnProfile ? 'No photos yet' : 'No portfolio photos available'}</h3>
-              <p>{isOwnProfile ? 'Upload your first portfolio photo above to get started!' : 'This user hasn\'t added any portfolio photos yet.'}</p>
+              <h3>{viewingOwnProfile ? 'No photos yet' : 'No portfolio photos available'}</h3>
+              <p>{viewingOwnProfile ? 'Upload your first portfolio photo above to get started!' : 'This user hasn\'t added any portfolio photos yet.'}</p>
             </div>
           )}
         </div>
       )}
 
       {/* Review Section - Allow everyone to leave reviews for other users */}
-      {!isOwnProfile && user && (
+      {!viewingOwnProfile && user && (
         <div className="card" style={{ marginBottom: '30px', padding: '30px' }}>
           <ReviewForm onSubmit={handleSubmitReview} isLoading={reviewSubmitting} />
         </div>
@@ -483,8 +489,8 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
               <ReviewCard 
                 key={review._id} 
                 review={review}
-                isOwnProfile={isOwnProfile}
-                onDelete={isOwnProfile ? handleDeleteReview : null}
+                isOwnProfile={viewingOwnProfile}
+                onDelete={viewingOwnProfile ? handleDeleteReview : null}
               />
             ))}
           </div>
@@ -494,7 +500,7 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
       </div>
 
       {/* Projects Section */}
-      {isOwnProfile && (profile?.userType === 'client' || profile?.userType === 'both') && (
+      {viewingOwnProfile && (profile?.userType === 'client' || profile?.userType === 'both') && (
         <div className="card" style={{ marginBottom: '30px', padding: '30px' }}>
           <h2>Posted Projects ({projects.length})</h2>
           {projects.length > 0 ? (
@@ -516,7 +522,7 @@ const Profile = ({ userId, isOwnProfile, navigate }) => {
       )}
 
       {/* Bids Section */}
-      {isOwnProfile && (profile?.userType === 'freelancer' || profile?.userType === 'both') && (
+      {viewingOwnProfile && (profile?.userType === 'freelancer' || profile?.userType === 'both') && (
         <div className="card" style={{ marginBottom: '30px', padding: '30px' }}>
           <h2>My Bids ({bids.length})</h2>
           {bids.length > 0 ? (

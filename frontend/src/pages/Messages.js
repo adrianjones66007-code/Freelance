@@ -24,7 +24,8 @@ const Messages = () => {
       const response = await axios.get('/api/messages/conversations/list', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setConversations(response.data);
+      const filtered = response.data.filter(conv => String(conv._id) !== user.id);
+      setConversations(filtered);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -46,7 +47,11 @@ const Messages = () => {
   };
 
   const handleSelectConversation = async (conversation) => {
-    const otherUserId = conversation._id;
+    const otherUserId = String(conversation._id);
+    if (otherUserId === user.id) {
+      alert('You cannot open a conversation with yourself');
+      return;
+    }
     setSelectedConversation({
       _id: otherUserId,
       ...conversation.userDetails
@@ -71,6 +76,10 @@ const Messages = () => {
   };
 
   const handleStartConversation = async (recipientId) => {
+    if (String(recipientId) === user.id) {
+      alert('You cannot start a conversation with yourself');
+      return;
+    }
     const recipient = freelancers.find(f => f._id === recipientId);
     setSelectedConversation(recipient);
     setShowNewConversation(false);
@@ -79,6 +88,10 @@ const Messages = () => {
 
   const handleSendMessage = async (message) => {
     if (!selectedConversation) return;
+    if (selectedConversation._id === user.id) {
+      alert('You cannot send a message to yourself');
+      return;
+    }
 
     try {
       const newMessage = await axios.post(
